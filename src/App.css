@@ -1,0 +1,30 @@
+.calendar-container {
+  margin-left: 50px;
+  margin-right: 50px;
+}
+
+.calendar-month {
+  width: calc(50% - 50px);
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.year-timeline {
+  margin-top: 20px;
+  margin-bottom: 20px;
+
+  width: 100%; height: 1px;
+  border-bottom: 2px solid tomato;
+
+  position: relative;
+
+
+  
+}
+
+.event-timeline {
+  position: absolute;
+  left: var(--day-of-year);
+}
