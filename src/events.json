@@ -1,0 +1,32 @@
+{
+  "1": {
+    "date": "01/06/2022",
+    "title": "plenière dev",
+    "place": "Niort",
+    "type": "Plénière"
+  }, 
+  "2": {
+    "date": "05/12/2022",
+    "title": "plenière dev",
+    "place": "Niort",
+    "type": "Plénière"
+  }, 
+  "3": {
+    "date": "12/12/2022",
+    "title": "comment  bien coder...",
+    "place": "Niort",
+    "type": "Pizza conf"
+  },
+  "4": {
+    "date": "15/12/2022",
+    "title": "DTC VII",
+    "place": "Niort",
+    "type": "Conférence interne"
+  }, 
+  "5": {
+    "date": "10/01/2023",
+    "title": "comment  mieux coder...",
+    "place": "Niort",
+    "type": "Pizza conf"
+  }
+}

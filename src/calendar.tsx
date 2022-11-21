@@ -55,6 +55,8 @@ export const events: EventsString = [{
   type: eventType.PIZZA
 }]
 
+
+
 type FourMonths = {
   date: Date,
   plusOne: Date,
