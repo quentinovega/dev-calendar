@@ -1,6 +1,9 @@
-import React, { useState } from 'react';
-import { getMonth, getYear, parse, addMonths, subMonths, format, compareAsc } from 'date-fns';
-import { ArrowLeft, ArrowRight } from 'react-feather';
+import classNames from 'classnames';
+import { eachMonthOfInterval, format, isSameDay, isToday, parse } from 'date-fns';
+import { fr } from 'date-fns/locale';
+import { useEffect, useState } from 'react';
+
+
 
 export const eventType = {
   CONF_INTERNE: "Conférence interne",
@@ -14,156 +17,240 @@ export const eventType = {
 interface IEventString {
   date: string
   title: string
-  place: string
   type: string
+  link?: string
 }
 type EventsString = Array<IEventString>
 
 interface IEvent {
   date: Date
   title: string
-  place: string
-  type: string
+  type: string,
+  link?: string
 }
 
 
 export const events: EventsString = [{
   "date": "01/06/2022",
   "title": "plenière dev",
-  "place": "Niort",
   "type": eventType.PLENIERE
 }, {
   "date": "05/12/2022",
   "title": "plenière dev",
-  "place": "Niort",
   "type": eventType.PLENIERE
 }, {
   date: "12/12/2022",
   title: 'comment  bien coder...',
-  place: 'Niort',
-  type: eventType.PIZZA
+  type: eventType.PIZZA,
 },
 {
-  "date": "15/12/2022",
+  "date": "14/12/2022",
   "title": "DTC VII",
-  "place": "Niort",
-  "type": eventType.CONF_INTERNE
+  "type": eventType.CONF_INTERNE,
+  link: 'https://teams.microsoft.com/l/message/19:36172bb3d4074308a98d6740417018f9@thread.skype/1670920064934?tenantId=9c9d8823-ab9e-4ac4-8251-32c4a7ae50d5&groupId=c17dc0b1-875b-4fdc-aeb7-be47d785440a&parentMessageId=1670920064934&teamName=Les%20d%C3%A9veloppeurs&channelName=Conf%C3%A9rences%20et%20%C3%A9v%C3%A9nements%20guildes&createdTime=1670920064934&allowXTenantAccess=false'
 }, {
   date: "10/01/2023",
   title: 'comment  mieux coder...',
-  place: 'Niort',
   type: eventType.PIZZA
 }]
 
-
-
-type FourMonths = {
-  date: Date,
-  plusOne: Date,
-  plusTwo: Date,
-  // plusThree: Date
-}
-
-const getFourMonths = (date: Date): FourMonths => ({
-  date: date,
-  plusOne: addMonths(date, 1),
-  plusTwo: addMonths(date, 2),
-  // plusThree: addMonths(date, 3)
-})
-
 export const Calendar = () => {
-  const [months, setMonths] = useState(getFourMonths(new Date()))
-  const [year, setYear] = useState(parseInt(format(new Date(), 'yyyy')))
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [selectedEvent, setSelectedEvent] = useState<IEvent>()
 
-  const dateCorresp = (date1: Date, date2: Date): boolean => {
-    return getMonth(date1) === getMonth(date2) && getYear(date1) === getYear(date2)
-  }
+  const [month, setMonth] = useState(new Date().getMonth());
+  const [year, setYear] = useState(new Date().getFullYear())
 
   const actualEvents = events
     .map<IEvent>(e => ({ ...e, date: parse(e.date, 'dd/MM/yyyy', new Date()) }))
     .filter(e => {
-      return Object.values(months).some(d => dateCorresp(d, e.date))
+      return isSameDay(selectedDate, e.date)
     })
-    .reduce<{ [key: string]: IEvent[] }>((acc, event) => {
-      const key = format(event.date, 'LLLL yyyy')
 
-      return { ...acc, [key]: [...(acc[key] || []), event] }
-    }, {})
+  const AVAILABLE_WEEK_DAYS = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam']
+
+  const range = (number: number) => {
+    return new Array(number)
+      .fill(0)
+      .map((_, i) => i);
+
+  }
+
+  const getMonthAndYear = (time: Date) => {
+    let date = new Date(time);
+    return {
+      year: date.getFullYear(),
+      month: date.getMonth()
+    }
+  }
+
+  const countOfDaysInMonth = (time: Date) => {
+    let date = getMonthAndYear(time);
+    return new Date(date.year, date.month + 1, 0).getDate();
+  }
+
+  const getStartedDayOfWeekByTime = (time: Date) => {
+    let date = getMonthAndYear(time);
+    return new Date(date.year, date.month, 1).getDay();
+  }
+
+  const getCalendar = () => {
+    let time = new Date(year, month, 1);
+
+    return {
+      active: {
+        days: countOfDaysInMonth(time),
+        startWeek: getStartedDayOfWeekByTime(time),
+        day: time.getDate(),
+        week: time.getDay(),
+        month: time.getMonth(),
+        year: time.getFullYear(),
+        formatted: format(time, 'dd/mm/yyyy', { locale: fr }),
+        tm: +time
+      },
+      pMonth: new Date(time.getFullYear(), time.getMonth() - 1, 1),
+      nMonth: new Date(time.getFullYear(), time.getMonth() + 1, 1),
+      pYear: new Date(new Date(time).getFullYear() - 1, 0, 1),
+      nYear: new Date(new Date(time).getFullYear() + 1, 0, 1)
+    }
+  }
+
+  const getDays = () => {
+    let calendar = getCalendar()
+
+    let latestDaysInPrevMonth = range(calendar.active.startWeek)
+      .map((_, idx) => {
+        return {
+          day: new Date(calendar.pMonth.getFullYear(), calendar.pMonth.getMonth(), countOfDaysInMonth(calendar.pMonth) - idx),
+          dayNumber: countOfDaysInMonth(calendar.pMonth) - idx,
+          month: new Date(calendar.pMonth).getMonth(),
+          year: new Date(calendar.pMonth).getFullYear(),
+          currentMonth: false
+        }
+      }).reverse();
+
+    let daysInActiveMonth = range(calendar.active.days).map((day, idx) => {
+      let dayNumber = idx + 1;
+      return {
+        day: new Date(year, calendar.active.month, dayNumber),
+        dayNumber,
+        month: calendar.active.month,
+        year: calendar.active.year,
+        currentMonth: true
+      }
+    });
+
+
+    let countOfDays = 42 - (latestDaysInPrevMonth.length + daysInActiveMonth.length);
+    let daysInNextMonth = range(countOfDays).map((day, idx) => {
+      return {
+        day: new Date(calendar.nMonth.getFullYear(), calendar.nMonth.getMonth(), idx + 1),
+        dayNumber: idx + 1,
+        month: new Date(calendar.nMonth).getMonth(),
+        year: new Date(calendar.nMonth).getFullYear(),
+        currentMonth: false
+      }
+    });
+
+    return [...latestDaysInPrevMonth, ...daysInActiveMonth, ...daysInNextMonth];
+  }
 
   return (
     <div className='calendar-container'>
-
-      <h1>Agenda des devs</h1>
-
       <div className='p-2 d-flex flex-column'>
-        <div className='d-flex flex-wrap'>
-          {Object.values(months)
-            .map((date, idx) => {
-              const keyDate = format(date, 'LLLL yyyy')
-              const events = actualEvents[keyDate] || []
-
-              return (
-                <div key={idx} className='col-sm-4 col-12 p-2'>
-                  <div className="card">
-                    <div className="card-header d-flex align-items-center justify-content-between">
-                      {idx === 0 && (
-                        <ArrowLeft className="cursor-pointer" onClick={() => {
-                          setMonths(getFourMonths(subMonths(months.date, 1)))
-                        }} />
-                      )}
-                      {keyDate}
-                      {idx === 2 && (
-                        <ArrowRight className="cursor-pointer" onClick={() => {
-                          setMonths(getFourMonths(addMonths(months.date, 1)))
-                        }} />
-                      )}
-                    </div>
-                    <div className="card-body">
-                      <div className='events-container'>
-                        {events
-                          .sort((a, b) => compareAsc(a.date, b.date))
-                          .map(ev => {
-                            const day = format(ev.date, 'iii dd')
-                            return (
-                              <div>{`${day}: ${ev.title}`}</div>
-                            )
-                          })}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )
-            })}
+        <div className="calendar disable-selection" id="calendar">
+          <div className="left-side">
+            <div className="current-day text-center">
+              <div className="calendar-left-side-day-of-week">{format(selectedDate, 'EEEE', { locale: fr })}</div>
+              <h1 className="calendar-left-side-day">{format(selectedDate, 'dd', { locale: fr })}</h1>
+              <div className="calendar-left-side-day-of-week">{`${format(selectedDate, 'MMMM', { locale: fr })} ${format(selectedDate, 'yyyy', { locale: fr })}`}</div>
+            </div>
+            {!selectedEvent && <div className="current-day-events">
+              <div>Évenements :</div>
+              <ul className="current-day-events-list">
+                {actualEvents.map((event, idx) => {
+                  return (
+                    <li className='cursor-pointer'>
+                      <a href={event.link || '#'} target="_blank">
+                        <div className="d-flex align-items-center">
+                          <span className='me-2'>{eventFormatter(event)}</span>
+                          <span>{event.title}</span>
+                        </div>
+                      </a>
+                    </li>
+                  )
+                })}
+              </ul>
+            </div>}
+          </div>
+          <div className="right-side">
+            <div className="text-right calendar-change-year">
+              <div className="calendar-change-year-slider">
+                <span
+                  className="fa fa-caret-left cursor-pointer calendar-change-year-slider-prev"
+                  onClick={() => setYear(year - 1)} />
+                <span className="calendar-current-year">{year}</span>
+                <span
+                  className="fa fa-caret-right cursor-pointer calendar-change-year-slider-next"
+                  onClick={() => setYear(year + 1)} />
+              </div>
+            </div>
+            <div className="calendar-month-list">
+              <ul className="calendar-month">
+                {eachMonthOfInterval({
+                  start: new Date(year, 0, 1),
+                  end: new Date(year, 11, 30)
+                }).map(month => {
+                  return (
+                    <li
+                      key={month.getMonth()}
+                      onClick={() => setMonth(month.getMonth())}>
+                      {format(month, 'MMM', { locale: fr })}
+                    </li>
+                  )
+                })}
+              </ul>
+            </div>
+            <div className="calendar-week-list">
+              <ul className="calendar-week">
+                {AVAILABLE_WEEK_DAYS.map(week => {
+                  return (
+                    <li key={week}>{week}</li>
+                  )
+                })}
+              </ul>
+            </div>
+            <div className="calendar-day-list">
+              <ul className="calendar-days">{getDays().map((day, idx) => {
+                return (
+                  <li
+                    key={idx}
+                    className={classNames({
+                      'another-month': !day.currentMonth,
+                      'active-day': isToday(day.day),
+                      'selected-day': isSameDay(day.day, selectedDate),
+                      // 'event-day': day.hasEvent
+                    })}
+                    data-day={day.dayNumber}
+                    data-month={day.month}
+                    data-year={day.year}
+                    onClick={() => {
+                      setSelectedDate(day.day)
+                    }}>
+                  </li>
+                )
+              })}</ul>
+            </div>
+          </div>
         </div>
 
       </div>
 
 
-      <div>
-        <div className="year-selector d-flex align-items-center">
-          <ArrowLeft className="cursor-pointer m-3" />
-          <h1>{year}</h1>
-          <ArrowRight className="cursor-pointer m-3" />
-        </div>
-        <div className='year-timeline'>
-          {events
-            .map<IEvent>(e => ({ ...e, date: parse(e.date, 'dd/MM/yyyy', new Date()) }))
-            .filter(e => getYear(e.date) === 2022)
-            .map(e => {
-              const doy = parseInt(format(e.date, 'DDD'))
-              const percent = doy / 365 * 100
-              return (
-                <div className="event-timeline" style={{ "--day-of-year": `${percent}%` } as React.CSSProperties}>
-                  {eventFormatter(e)}
-                </div>
-              )
-            })
-          }
-        </div>
-      </div>
 
 
-    </div>
+
+    </div >
   )
 }
 
