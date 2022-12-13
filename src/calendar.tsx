@@ -73,6 +73,7 @@ const getFourMonths = (date: Date): FourMonths => ({
 
 export const Calendar = () => {
   const [months, setMonths] = useState(getFourMonths(new Date()))
+  const [year, setYear] = useState(parseInt(format(new Date(), 'yyyy')))
 
   const dateCorresp = (date1: Date, date2: Date): boolean => {
     return getMonth(date1) === getMonth(date2) && getYear(date1) === getYear(date2)
@@ -92,59 +93,73 @@ export const Calendar = () => {
   return (
     <div className='calendar-container'>
 
-      <div className='year-timeline'>
-        {events
-          .map<IEvent>(e => ({ ...e, date: parse(e.date, 'dd/MM/yyyy', new Date()) }))
-          .filter(e => getYear(e.date) === 2022)
-          .map(e => {
-            const doy = parseInt(format(e.date, 'DDD'))
-            const percent = doy / 365 * 100
-            return (
-              <div className="event-timeline" style={{ "--day-of-year": `${percent}%` } as React.CSSProperties}>
-                {eventFormatter(e)}
-              </div>
-            )
-          })
-        }
-      </div>
+      <h1>Agenda des devs</h1>
 
-      <div className="d-flex flex-row justify-content-between">
-        <ArrowLeft className="cursor-pointer" onClick={() => {
-          setMonths(getFourMonths(subMonths(months.date, 1)))
-        }} />
-        <ArrowRight className="cursor-pointer" onClick={() => {
-          setMonths(getFourMonths(addMonths(months.date, 1)))
-        }} />
-      </div>
+      <div className='p-2 d-flex flex-column'>
+        <div className='d-flex flex-wrap'>
+          {Object.values(months)
+            .map((date, idx) => {
+              const keyDate = format(date, 'LLLL yyyy')
+              const events = actualEvents[keyDate] || []
 
-      <div className='d-flex flex-wrap'>
-        {Object.values(months)
-          .map((date, idx) => {
-            const keyDate = format(date, 'LLLL yyyy')
-            const events = actualEvents[keyDate] || []
-
-            return (
-              <div key={idx} className='calendar-month'>
-                <div className="card">
-                  <div className="card-header">
-                    {keyDate}
-                  </div>
-                  <div className="card-body">
-                    <div className='events-container'>
-                      {events
-                        .sort((a, b) => compareAsc(a.date, b.date))
-                        .map(ev => {
-                          const day = format(ev.date, 'iii dd')
-                          return (
-                            <div>{`${day}: ${ev.title}`}</div>
-                          )
-                        })}
+              return (
+                <div key={idx} className='col-sm-4 col-12 p-2'>
+                  <div className="card">
+                    <div className="card-header d-flex align-items-center justify-content-between">
+                      {idx === 0 && (
+                        <ArrowLeft className="cursor-pointer" onClick={() => {
+                          setMonths(getFourMonths(subMonths(months.date, 1)))
+                        }} />
+                      )}
+                      {keyDate}
+                      {idx === 2 && (
+                        <ArrowRight className="cursor-pointer" onClick={() => {
+                          setMonths(getFourMonths(addMonths(months.date, 1)))
+                        }} />
+                      )}
+                    </div>
+                    <div className="card-body">
+                      <div className='events-container'>
+                        {events
+                          .sort((a, b) => compareAsc(a.date, b.date))
+                          .map(ev => {
+                            const day = format(ev.date, 'iii dd')
+                            return (
+                              <div>{`${day}: ${ev.title}`}</div>
+                            )
+                          })}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            )
-          })}
+              )
+            })}
+        </div>
+
+      </div>
+
+
+      <div>
+        <div className="year-selector d-flex align-items-center">
+          <ArrowLeft className="cursor-pointer m-3" />
+          <h1>{year}</h1>
+          <ArrowRight className="cursor-pointer m-3" />
+        </div>
+        <div className='year-timeline'>
+          {events
+            .map<IEvent>(e => ({ ...e, date: parse(e.date, 'dd/MM/yyyy', new Date()) }))
+            .filter(e => getYear(e.date) === 2022)
+            .map(e => {
+              const doy = parseInt(format(e.date, 'DDD'))
+              const percent = doy / 365 * 100
+              return (
+                <div className="event-timeline" style={{ "--day-of-year": `${percent}%` } as React.CSSProperties}>
+                  {eventFormatter(e)}
+                </div>
+              )
+            })
+          }
+        </div>
       </div>
 
 

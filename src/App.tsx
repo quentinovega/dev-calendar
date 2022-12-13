@@ -4,8 +4,8 @@ import { Calendar } from './calendar'
 function App() {
 
   return (
-    <div className='row'>
-      <div className="container">
+    <div className='container-fluid'>
+      <div className="row">
         <Calendar />
       </div>
     </div>
