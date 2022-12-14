@@ -38,7 +38,7 @@ export const Calendar = () => {
 
   const [month, setMonth] = useState(new Date().getMonth());
   const [year, setYear] = useState(new Date().getFullYear())
-  
+
 
   const actualEvents = events
     .map<IEvent>(e => ({ ...e, date: parse(e.date, 'dd/MM/yyyy', new Date()) }))
@@ -191,7 +191,7 @@ export const Calendar = () => {
                 }).map(m => {
                   return (
                     <li
-                      className={classNames({active: m.getMonth() === month})}
+                      className={classNames({ active: m.getMonth() === month })}
                       key={m.getMonth()}
                       onClick={() => setMonth(m.getMonth())}>
                       {format(m, 'MMM', { locale: fr })}
@@ -233,11 +233,6 @@ export const Calendar = () => {
         </div>
 
       </div>
-
-
-
-
-
     </div >
   )
 }

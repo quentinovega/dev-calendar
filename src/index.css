@@ -45,6 +45,7 @@ body {
   /* Chrome, Safari, and Opera */
   -webkit-touch-callout: none;
   /* Disable Android and iOS callouts*/
+  user-select: none;
 }
 
 .calendar,
