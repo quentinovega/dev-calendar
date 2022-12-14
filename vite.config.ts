@@ -8,5 +8,6 @@ export default defineConfig({
   build: {
     outDir: path.resolve(__dirname, 'docs'),
     emptyOutDir: true,
-  }
+  },
+  base: "/dev-calendar/"
 })
