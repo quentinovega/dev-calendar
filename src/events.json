@@ -1,32 +1,23 @@
+[{
+  "date": "01/06/2022",
+  "title": "plenière dev",
+  "type": "PLENIERE"
+}, {
+  "date": "05/12/2022",
+  "title": "plenière dev",
+  "type": "PLENIERE"
+}, {
+  "date": "12/12/2022",
+  "title": "comment  bien coder...",
+  "type": "PIZZA"
+},
 {
-  "1": {
-    "date": "01/06/2022",
-    "title": "plenière dev",
-    "place": "Niort",
-    "type": "Plénière"
-  }, 
-  "2": {
-    "date": "05/12/2022",
-    "title": "plenière dev",
-    "place": "Niort",
-    "type": "Plénière"
-  }, 
-  "3": {
-    "date": "12/12/2022",
-    "title": "comment  bien coder...",
-    "place": "Niort",
-    "type": "Pizza conf"
-  },
-  "4": {
-    "date": "15/12/2022",
-    "title": "DTC VII",
-    "place": "Niort",
-    "type": "Conférence interne"
-  }, 
-  "5": {
-    "date": "10/01/2023",
-    "title": "comment  mieux coder...",
-    "place": "Niort",
-    "type": "Pizza conf"
-  }
-}
+  "date": "14/12/2022",
+  "title": "DTC VII",
+  "type": "CONF_INTERNE",
+  "link": "https://teams.microsoft.com/l/message/19:36172bb3d4074308a98d6740417018f9@thread.skype/1670920064934?tenantId=9c9d8823-ab9e-4ac4-8251-32c4a7ae50d5&groupId=c17dc0b1-875b-4fdc-aeb7-be47d785440a&parentMessageId=1670920064934&teamName=Les%20d%C3%A9veloppeurs&channelName=Conf%C3%A9rences%20et%20%C3%A9v%C3%A9nements%20guildes&createdTime=1670920064934&allowXTenantAccess=false"
+}, {
+  "date": "10/01/2023",
+  "title":"comment  mieux coder...",
+  "type": "PIZZA"
+}]

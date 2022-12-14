@@ -61,7 +61,7 @@ body {
 .calendar {
   background: white;
   width: 880px;
-  height: 490px;
+  height: 500px;
   border-radius: 10px;
   overflow: hidden;
 }
@@ -252,7 +252,6 @@ body {
 
 .calendar .calendar-days li:hover:after,
 .calendar .calendar-days li.selected-day:after,
-.calendar .calendar-days li.event-day:before,
 .calendar .calendar-days li.active-day:after {
   border-radius: 50%;
 }
@@ -265,12 +264,13 @@ body {
 
 .calendar .calendar-days li.event-day:before {
   content: ' ';
-  width: 5px;
-  height: 5px;
+  width: 20px;
+  height: 2px;
   position: absolute;
-  top: 7px;
-  right: 7px;
-  background: #1400c7;
+  bottom: 12px;
+  right: calc(48% - 10px);
+  z-index: 10;
+  background: #404040;
 }
 
 .calendar .calendar-days li.active-day:after {

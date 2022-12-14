@@ -3,6 +3,8 @@ import { eachMonthOfInterval, format, isSameDay, isToday, parse } from 'date-fns
 import { fr } from 'date-fns/locale';
 import { useEffect, useState } from 'react';
 
+import events from './events.json';
+
 
 
 export const eventType = {
@@ -30,36 +32,13 @@ interface IEvent {
 }
 
 
-export const events: EventsString = [{
-  "date": "01/06/2022",
-  "title": "plenière dev",
-  "type": eventType.PLENIERE
-}, {
-  "date": "05/12/2022",
-  "title": "plenière dev",
-  "type": eventType.PLENIERE
-}, {
-  date: "12/12/2022",
-  title: 'comment  bien coder...',
-  type: eventType.PIZZA,
-},
-{
-  "date": "14/12/2022",
-  "title": "DTC VII",
-  "type": eventType.CONF_INTERNE,
-  link: 'https://teams.microsoft.com/l/message/19:36172bb3d4074308a98d6740417018f9@thread.skype/1670920064934?tenantId=9c9d8823-ab9e-4ac4-8251-32c4a7ae50d5&groupId=c17dc0b1-875b-4fdc-aeb7-be47d785440a&parentMessageId=1670920064934&teamName=Les%20d%C3%A9veloppeurs&channelName=Conf%C3%A9rences%20et%20%C3%A9v%C3%A9nements%20guildes&createdTime=1670920064934&allowXTenantAccess=false'
-}, {
-  date: "10/01/2023",
-  title: 'comment  mieux coder...',
-  type: eventType.PIZZA
-}]
-
 export const Calendar = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedEvent, setSelectedEvent] = useState<IEvent>()
 
   const [month, setMonth] = useState(new Date().getMonth());
   const [year, setYear] = useState(new Date().getFullYear())
+  
 
   const actualEvents = events
     .map<IEvent>(e => ({ ...e, date: parse(e.date, 'dd/MM/yyyy', new Date()) }))
@@ -116,39 +95,46 @@ export const Calendar = () => {
   }
 
   const getDays = () => {
-    let calendar = getCalendar()
+    const calendar = getCalendar()
+    const allEvents = events.map<IEvent>(e => ({ ...e, date: parse(e.date, 'dd/MM/yyyy', new Date()) }))
 
-    let latestDaysInPrevMonth = range(calendar.active.startWeek)
+    const latestDaysInPrevMonth = range(calendar.active.startWeek)
       .map((_, idx) => {
+        const day: Date = new Date(calendar.pMonth.getFullYear(), calendar.pMonth.getMonth(), countOfDaysInMonth(calendar.pMonth) - idx)
         return {
-          day: new Date(calendar.pMonth.getFullYear(), calendar.pMonth.getMonth(), countOfDaysInMonth(calendar.pMonth) - idx),
+          day,
           dayNumber: countOfDaysInMonth(calendar.pMonth) - idx,
           month: new Date(calendar.pMonth).getMonth(),
           year: new Date(calendar.pMonth).getFullYear(),
-          currentMonth: false
+          currentMonth: false,
+          hasEvent: allEvents.some(e => isSameDay(e.date, day))
         }
       }).reverse();
 
-    let daysInActiveMonth = range(calendar.active.days).map((day, idx) => {
-      let dayNumber = idx + 1;
+    const daysInActiveMonth = range(calendar.active.days).map((_, idx) => {
+      let dayNumber: number = idx + 1;
+      const day = new Date(year, calendar.active.month, dayNumber);
       return {
-        day: new Date(year, calendar.active.month, dayNumber),
+        day,
         dayNumber,
         month: calendar.active.month,
         year: calendar.active.year,
-        currentMonth: true
+        currentMonth: true,
+        hasEvent: allEvents.some(e => isSameDay(e.date, day))
       }
     });
 
 
     let countOfDays = 42 - (latestDaysInPrevMonth.length + daysInActiveMonth.length);
-    let daysInNextMonth = range(countOfDays).map((day, idx) => {
+    let daysInNextMonth = range(countOfDays).map((_, idx) => {
+      const day: Date = new Date(calendar.nMonth.getFullYear(), calendar.nMonth.getMonth(), idx + 1)
       return {
-        day: new Date(calendar.nMonth.getFullYear(), calendar.nMonth.getMonth(), idx + 1),
+        day,
         dayNumber: idx + 1,
         month: new Date(calendar.nMonth).getMonth(),
         year: new Date(calendar.nMonth).getFullYear(),
-        currentMonth: false
+        currentMonth: false,
+        hasEvent: allEvents.some(e => isSameDay(e.date, day))
       }
     });
 
@@ -166,17 +152,19 @@ export const Calendar = () => {
               <div className="calendar-left-side-day-of-week">{`${format(selectedDate, 'MMMM', { locale: fr })} ${format(selectedDate, 'yyyy', { locale: fr })}`}</div>
             </div>
             {!selectedEvent && <div className="current-day-events">
-              <div>Évenements :</div>
+              <div className='mb-2'>Évenements :</div>
               <ul className="current-day-events-list">
                 {actualEvents.map((event, idx) => {
+                  const display = <div className="d-flex align-items-center">
+                    <span className='me-2'>{eventFormatter(event)}</span>
+                    <span>{event.title}</span>
+                  </div>
                   return (
-                    <li className='cursor-pointer'>
-                      <a href={event.link || '#'} target="_blank">
-                        <div className="d-flex align-items-center">
-                          <span className='me-2'>{eventFormatter(event)}</span>
-                          <span>{event.title}</span>
-                        </div>
-                      </a>
+                    <li key={idx}>
+                      {event.link && <a href={event.link || '#'} target="_blank">
+                        {display}
+                      </a>}
+                      {!event.link && display}
                     </li>
                   )
                 })}
@@ -200,12 +188,13 @@ export const Calendar = () => {
                 {eachMonthOfInterval({
                   start: new Date(year, 0, 1),
                   end: new Date(year, 11, 30)
-                }).map(month => {
+                }).map(m => {
                   return (
                     <li
-                      key={month.getMonth()}
-                      onClick={() => setMonth(month.getMonth())}>
-                      {format(month, 'MMM', { locale: fr })}
+                      className={classNames({active: m.getMonth() === month})}
+                      key={m.getMonth()}
+                      onClick={() => setMonth(m.getMonth())}>
+                      {format(m, 'MMM', { locale: fr })}
                     </li>
                   )
                 })}
@@ -229,15 +218,14 @@ export const Calendar = () => {
                       'another-month': !day.currentMonth,
                       'active-day': isToday(day.day),
                       'selected-day': isSameDay(day.day, selectedDate),
-                      // 'event-day': day.hasEvent
+                      'event-day': day.hasEvent
                     })}
                     data-day={day.dayNumber}
                     data-month={day.month}
                     data-year={day.year}
                     onClick={() => {
                       setSelectedDate(day.day)
-                    }}>
-                  </li>
+                    }} />
                 )
               })}</ul>
             </div>
@@ -256,16 +244,16 @@ export const Calendar = () => {
 
 const eventFormatter = (event: IEvent) => {
   switch (event.type) {
-    case eventType.PIZZA:
-      return <i className="fa-sharp fa-solid fa-pizza-slice" />
-    case eventType.HANDSON:
-      return <i className="fa-solid fa-laptop-code" />
-    case eventType.DEJ:
-      return <i className="fa-solid fa-croissant" />
-    case eventType.CONF_INTERNE:
-    case eventType.CONF_EXTERNE:
-      return <i className="fa-solid fa-microphone" />
-    case eventType.PLENIERE:
-      return <i className="fa-solid fa-poo" />
+    case 'PIZZA':
+      return <i title={eventType[event.type]} className="fa-sharp fa-solid fa-pizza-slice" />
+    case 'HANDSON':
+      return <i title={eventType[event.type]} className="fa-solid fa-laptop-code" />
+    case 'DEJ':
+      return <i title={eventType[event.type]} className="fa-solid fa-croissant" />
+    case 'CONF_INTERNE':
+    case 'CONF_EXTERNE':
+      return <i title={eventType[event.type]} className="fa-solid fa-microphone" />
+    case 'PLENIERE':
+      return <i title={eventType[event.type]} className="fa-solid fa-users" />
   }
 }
