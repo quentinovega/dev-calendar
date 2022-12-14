@@ -1,0 +1,30 @@
+name: Build calendar
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  update-playground:
+    name: Build calendar
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - name: Build
+        run: |
+          npm install
+          npm run build
+        env:
+          CI: "false"
+      - name: Commit files
+        run: |
+          git config --local user.email "github-actions@users.noreply.github.com"
+          git config --local user.name "github-actions"
+          git add --all
+          git commit -am "build app"
+      - name: Push playground
+        uses: ad-m/github-push-action@master
+        with:
+          branch: main
+          github_token: ${{ secrets.GITHUB_TOKEN}}
